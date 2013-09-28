@@ -1,0 +1,201 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>João Bolila</title>
+  <meta name="author" content="João Bolila">
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  
+  <meta property="og:site_name" content="João Bolila"/>
+
+  
+    <meta property="og:image" content="undefined"/>
+  
+
+  <link href="/favicon.png" rel="icon">
+  <link rel="alternate" href="/atom.xml" title="João Bolila" type="application/atom+xml">
+  <link  rel="stylesheet" href="//netdna.bootstrapcdn.com/font-awesome/3.2.1/css/font-awesome.min.css" />
+  <link rel="stylesheet" href="/css/style.css" media="screen" type="text/css">
+  <link rel="icon" type="image/png" href="/img/favicon.png" />
+  <script src="//cdnjs.cloudflare.com/ajax/libs/modernizr/2.6.2/modernizr.min.js"></script>
+  
+</head>
+
+
+<body>
+  <div id="container" class="container">
+    <header id="sidebar" role="banner" class="sidebar"><div id="branding" class="branding">
+  <a href="/">
+    <img class="circle" src="http://www.gravatar.com/avatar/a54f0f49894720aafa1b0a1f822f6923?d=mm&s=140" alt="Anthem">
+  </a>
+  <h1 id="site-title" class="title">
+    <a href="/">João Bolila</a>
+  </h1>
+</div>
+<a href="#" id="toggle"> ☰ </a>
+<div class="about" style="display: none">
+  <p>breather, programmer, ashtangy,.. nothing special .. just trying</p>
+</div>
+<nav class="menu-navigation-container">
+  <ul>
+    
+      <li><a href="/">Home</a></li>
+    
+      <li><a href="/about">About</a></li>
+    
+      <li><a href="/archives">Archives</a></li>
+    
+  </ul>
+</nav>
+<div class="widget">
+  
+  <nav class="search">
+  <form action="http://google.com/search" method="get" accept-charset="utf-8">
+    <input type="search" name="q" results="0" placeholder="Search">
+    <input type="hidden" name="q" value="site:bolila.com">
+  </form>
+</nav>
+
+  
+
+  
+<nav class="tags">
+  <h3 class="title">Tags</h3>
+  <ul>
+  
+    <li><a href="/tags/perl/">perl</a>&nbsp;<small>(1)</small></li>
+  
+  </ul>
+</nav>
+
+
+  <!--nav class="other">
+  <ul>
+    <li>
+      <a href="" target="_blank"></a>
+    </li>
+  </ul>
+</nav-->
+
+
+</div>
+</header>
+    <section id="content" class="blog">
+      
+  <article class="post">
+  <header>
+    
+  
+    <h1 class="title"><a href="/2013/09/24/backinm/">Back in a minute!</a></h1>
+  
+
+    
+  </header>
+  <section class="entry">
+    
+      <p>I&#39;m working with <a href="https://github.com/PerlDancer/Dancer2" target="_blank">Dancer2</a> web framework to deploy a REST API, and provid one <a href="http://backbonejs.org/" target="_blank">Backbone.js</a> application.</p>
+<p>Just playing with some new frameworks and new tools, <a href="https://github.com/tokuhirom/plenv" target="_blank">plenv</a> and <a href="https://github.com/miyagawa/carton" target="_blank">carton</a>.</p>
+<figure class="highlight lang-bash"><table><tr><td class="gutter"><pre>1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+</pre></td><td class="code"><pre>&gt; plenv install-cpanm
+&gt; cpanm Carton
+&gt; plenv local 5.16.3
+&gt; cat cpanfile
+requires <span class="string">"Plack"</span>, <span class="string">"1.0029"</span>;
+requires <span class="string">"Starman"</span>, <span class="string">"0.4008"</span>;
+
+requires <span class="string">"Dancer2"</span>, <span class="string">"0.08"</span>;
+requires <span class="string">"Dancer2::Plugin::DBIC"</span>, <span class="string">"0.0004"</span>;
+requires <span class="string">"Dancer2::Plugin::REST"</span>, <span class="string">"0.12"</span>;
+requires <span class="string">"Dancer2::Session::Cookie"</span>, <span class="string">"0.005"</span>;
+
+&gt; carton install
+&gt; <span class="keyword">echo</span> <span class="string">'local/'</span> &gt;&gt; .gitignore
+&gt; carton exec plackup -s Starman -r -p 8081 -E development -I lib app.psgi
+</pre></td></tr></table></figure>
+
+
+<p>Back in a minute..</p>
+
+    
+  </section>
+  <footer>
+    
+    <div class="clearfix"></div>
+    
+      <div class="alignleft widget">
+        
+        
+          <time datetime="2013-09-24T13:02:15.000Z"><a href="/2013/09/24/backinm/">Sep 24 2013</a></time>
+        
+        
+
+        
+  
+  <a href="/tags/perl/">#perl</a>
+
+
+      </div>
+      
+    
+    <div class="clearfix"></div>
+  </footer>
+</article>
+
+
+
+
+
+    </section>
+    <footer id="footer" class="clearfix footer"><div class="alignleft">
+  
+  &copy; 2013 João Bolila
+  
+</div>
+<div class="clearfix"></div></footer>
+  </div>
+  <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/jquery.imagesloaded/3.0.4/jquery.imagesloaded.min.js"></script>
+<script src="/js/main.js"></script>
+
+
+
+
+<link rel="stylesheet" type="text/css" href="/fancybox/jquery.fancybox.css">
+<script type="text/javascript" src="/fancybox/jquery.fancybox.js"></script>
+<script type="text/javascript">
+(function($){
+  $('.fancybox').fancybox({
+    prevEffect: 'none',
+    nextEffect: 'none',
+    closeBtn: false,
+    helpers: {
+        title: {type: 'inside'},
+        buttons: {
+            position: 'bottom'
+        }
+    }
+  });
+})(jQuery);
+</script>
+
+
+</body>
+</html>
