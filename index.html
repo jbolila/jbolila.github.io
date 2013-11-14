@@ -82,6 +82,8 @@
   
     <li><a href="/tags/perl/">perl</a>&nbsp;<small>(1)</small></li>
   
+    <li><a href="/tags/perl security/">perl security</a>&nbsp;<small>(1)</small></li>
+  
   </ul>
 </nav>
 
@@ -99,6 +101,205 @@
 </header>
     <section id="content" class="blog">
       
+  <article class="post">
+  <header>
+    
+  
+    <h1 class="title"><a href="/2013/11/14/browserid/">Identity &quot;Sign in with your email&quot;</a></h1>
+  
+
+    
+  </header>
+  <section class="entry">
+    
+      <p>A few days ago <a href="http://www.theguardian.com/technology/2013/nov/07/adobe-password-leak-can-check" target="_blank">Adobe lost 150 million customer passwords</a> and got attention for the well known experts on computers security and cryptographers, like Bruce Schneier on his <a href="https://www.schneier.com/blog/archives/2013/11/cryptographic_b.html" target="_blank">blog</a> and Steve Gibbson on his Twitter:</p>
+<p><img src="img/Steve-Gibson--SGgrc--no-Twitter.png" alt="@SGgrc"></p>
+<p>And from the experts is also possible to know the <a href="http://stricture-group.com/files/adobe-top100.txt" target="_blank">top passwords</a> . As expected and in any other site the most common passwords are: 123456, 123456789, password, 12345678, qwerty, 1234567, 111111, 123123.</p>
+<p>Isn&#39;t easy or cheap contract one cryptographer or security experts like <a href="http://nakedsecurity.sophos.com/2013/11/04/anatomy-of-a-password-disaster-adobes-giant-sized-cryptographic-blunder/" target="_blank">those</a>.</p>
+<p>For me as a programmer interested in this themes it is almost impossible maintain one solution of password storage and validation, that protects my reputation and the regular customer during the life time of a service (one good solution today can be less effective tomorrow). And I don&#39;t have all of my time dedicated to development and maintenance of authentication systems.</p>
+<blockquote>
+<p>Pro Tip: The message, “Password contains invalid characters” means your security team, architects and IT people need to be fired. — Nick Selby ‏@nselby</p>
+</blockquote>
+<p>One alternative is to delegate this functionality for one well known and trusted entity and from here we have a decision to make.</p>
+<p>Or follow the current leaders of OAuth, Facebook, Google, Twitter and Yahoo and obligate our customers to have one account in one of this social services, (worst some sites have a shortened list and give just two options to facilitate the decision and just allow Facebook or Google) and obligate the customer to give up is own privacy.</p>
+<p>Or in alternative we can ask our customers for something they have most, <a href="http://royal.pingdom.com/2013/01/16/internet-2012-in-numbers/" target="_blank">2.2 billion</a>, his email address and nothing more.</p>
+<p><a href="https://developer.mozilla.org/en-US/Persona" target="_blank">Mozilla Persona</a> is the service for authenticate users over the Internet based on email address, keeping the privacy (the only information you got from Mozilla is the email address of the authenticated user).</p>
+<blockquote>
+<p>“Simple, privacy-sensitive single sign-in: let your users sign into your website with their email address, and free yourself from password management.”</p>
+</blockquote>
+<p>For this and expressing myself in Perl I have developed the <a href="http://search.cpan.org/~bolila/Plack-Middleware-Auth-BrowserID-0.0.3/" target="_blank">Plack::Middleware::Auth::BrowserID</a> module. This allows any Plack solution to provide functionality of login and logout, in a very simple way.</p>
+<p>One simple example which integrates with Dancer2, Mojo and Plack by himself is available <a href="https://github.com/jbolila/Plack-Middleware-Auth-BrowserID/tree/master/example" target="_blank">here</a>.</p>
+<p>The main blocks of the example are, the PSGI file:</p>
+<figure class="highlight lang-perl"><table><tr><td class="gutter"><pre>1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+</pre></td><td class="code"><pre><span class="comment">#..</span>
+
+<span class="keyword">use</span> Plack::Builder;
+<span class="keyword">use</span> Plack::Session;
+
+<span class="comment">#..</span>
+
+builder {
+    enable <span class="string">'Session'</span>, <span class="string">store =&gt;</span> <span class="string">'File'</span>;
+
+    mount <span class="string">'/auth'</span> =&gt; builder {
+        enable <span class="string">'Auth::BrowserID'</span>, <span class="string">audience =&gt;</span> <span class="string">'http://localhost:8082/'</span>;
+    };
+
+    mount <span class="string">'/'</span>     =&gt; <span class="variable">$app</span>;
+};
+</pre></td></tr></table></figure>
+
+
+
+<p>In the <a href="https://github.com/jbolila/Plack-Middleware-Auth-BrowserID/blob/master/example/templates/hello.html.ep" target="_blank">template</a>, include the external Javascript dependencies:</p>
+<figure class="highlight lang-html"><table><tr><td class="gutter"><pre>1
+2
+3
+</pre></td><td class="code"><pre>  <span class="tag">&lt;<span class="title">script</span> <span class="attribute">src</span>=<span class="value">"//cdnjs.cloudflare.com/ajax/libs/jquery/1.10.2/jquery.min.js"</span>&gt;</span><span class="javascript"></span><span class="tag">&lt;/<span class="title">script</span>&gt;</span>
+  <span class="tag">&lt;<span class="title">script</span> <span class="attribute">src</span>=<span class="value">"//cdnjs.cloudflare.com/ajax/libs/jquery-cookie/1.3.1/jquery.cookie.min.js"</span>&gt;</span><span class="javascript"></span><span class="tag">&lt;/<span class="title">script</span>&gt;</span>
+  <span class="tag">&lt;<span class="title">script</span> <span class="attribute">src</span>=<span class="value">"https://login.persona.org/include.js"</span>&gt;</span><span class="javascript"></span><span class="tag">&lt;/<span class="title">script</span>&gt;</span>
+</pre></td></tr></table></figure>
+
+
+<p>Setup the watch with email and url&#39;s for login and logout (as defined in the PSGI <em>“mount ‘/auth’”</em>):</p>
+<figure class="highlight lang-javascript"><table><tr><td class="gutter"><pre>1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+</pre></td><td class="code"><pre>email = $.cookie(<span class="string">'email'</span>) || <span class="literal">null</span>;
+
+navigator.id.watch({
+  loggedInUser: email,
+  onlogin: <span class="keyword">function</span>(assertion) {
+    <span class="keyword">return</span> $.post(<span class="string">'/auth/signin'</span>, {
+      assertion: assertion
+    }, <span class="keyword">function</span>(data) {
+      <span class="keyword">return</span> window.location.reload();
+    });
+  },
+  onlogout: <span class="keyword">function</span>() {
+    <span class="keyword">return</span> window.location = <span class="string">'/auth/signout'</span>;
+  }
+});
+</pre></td></tr></table></figure>
+
+
+
+<p>And map the events in the DOM with the watch from Mozilla:</p>
+<figure class="highlight lang-javascript"><table><tr><td class="gutter"><pre>1
+2
+3
+4
+5
+6
+7
+8
+9
+</pre></td><td class="code"><pre><span class="keyword">var</span> signinLink = document.getElementById(<span class="string">'signin'</span>);
+<span class="keyword">if</span> (signinLink) {
+  signinLink.onclick = <span class="keyword">function</span>() { navigator.id.request(); };
+}
+
+<span class="keyword">var</span> signoutLink = document.getElementById(<span class="string">'signout'</span>);
+<span class="keyword">if</span> (signoutLink) {
+  signoutLink.onclick = <span class="keyword">function</span>() { navigator.id.logout(); };
+}
+</pre></td></tr></table></figure>
+
+
+<p>and it&#39;s done on the template.</p>
+<p>In the web application get the Plack::Session:</p>
+<figure class="highlight lang-perl"><table><tr><td class="gutter"><pre>1
+2
+3
+4
+5
+6
+7
+8
+</pre></td><td class="code"><pre><span class="keyword">package</span> MyApp::Bar;
+<span class="keyword">use</span> Dancer2;
+<span class="keyword">use</span> Plack::Session;
+
+get <span class="string">'/'</span> =&gt; <span class="sub"><span class="keyword">sub</span> {</span>
+    <span class="keyword">my</span> <span class="variable">$session</span> = Plack::Session-&gt;new( <span class="keyword">shift</span>-&gt;env );
+    <span class="string">'Hi! do you wanna dance? '</span> . <span class="variable">$session</span>-&gt;get(<span class="string">'email'</span>);
+};
+</pre></td></tr></table></figure>
+
+
+<p>It&#39;s very easy, got protection for lots of troubles and get more time to develop great services like dose, <a href="http://asciinema.org/" target="_blank">Asciinema</a> and <a href="https://webmaker.org/en" target="_blank">Webmaker</a>.</p>
+<p>And give a further step:</p>
+<figure class="highlight lang-sql"><table><tr><td class="gutter"><pre>1
+2
+</pre></td><td class="code"><pre> <span class="operator"><span class="keyword">ALTER</span> <span class="keyword">TABLE</span> <span class="keyword">user</span>
+  <span class="keyword">DROP</span> <span class="keyword">COLUMN</span> password;</span>
+</pre></td></tr></table></figure>
+
+
+
+<p>References:</p>
+<ul>
+<li><a href="https://github.com/jbolila/Plack-Middleware-Auth-BrowserID" target="_blank"> jbolila / Plack-Middleware-Auth-BrowserID</a></li>
+<li><a href="http://identity.mozilla.com/" target="_blank">Identity at Mozilla (blog)</a></li>
+<li><a href="http://nakedsecurity.sophos.com/2013/11/04/anatomy-of-a-password-disaster-adobes-giant-sized-cryptographic-blunder/" target="_blank">Anatomy of a password disaster - Adobe&#39;s giant-sized cryptographic blunder</a></li>
+<li><a href="https://www.schneier.com/blog/archives/2013/11/cryptographic_b.html" target="_blank">Cryptographic Blunders Revealed by Adobe&#39;s Password Leak</a></li>
+<li><a href="http://nakedsecurity.sophos.com/2012/06/06/linkedin-confirms-hack-over-60-of-stolen-passwords-already-cracked/" target="_blank">LinkedIn confirms hack, over 60% of stolen passwords already cracked</a></li>
+</ul>
+
+    
+  </section>
+  <footer>
+    
+    <div class="clearfix"></div>
+    
+      <div class="alignleft widget">
+        
+        
+          <time datetime="2013-11-14T13:48:15.000Z"><a href="/2013/11/14/browserid/">Nov 14 2013</a></time>
+        
+        
+
+        
+  
+  <a href="/tags/perl security/">#perl security</a>
+
+
+      </div>
+      
+    
+    <div class="clearfix"></div>
+  </footer>
+</article>
+
+
+
   <article class="post">
   <header>
     
