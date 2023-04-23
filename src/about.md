@@ -9,10 +9,11 @@ Name: João Bolila
 Based in: Europe, Portugal, Évora, Montemor-o-Novo
 
 Available on <a rel="me" href="https://mastodon.social/@jbolila">Mastodon</a>
-and <a rel="me" href="https://pt.linkedin.com/in/jbolila">Linkedin</a>.
+and <a rel="me" href="https://www.linkedin.com/in/jbolila/">Linkedin</a>.
 
 ## Interests
 
+- Project Management of Fast Flow Teams using Scrum
 - Programming: Rust, Typescript (Deno), NodeJS, Python
 - Distributed Systems design
 - Cloud computing: Kubernetes, Kafka
