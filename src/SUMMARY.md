@@ -1,6 +1,6 @@
 # Summary
 
-# [About](./about.md)
+<span style="font-size: 1.2em;"> [About](./about.md) </span>
 
 # 2023
 
