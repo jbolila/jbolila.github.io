@@ -8,8 +8,8 @@ Name: João Bolila
 
 Based in: Europe, Portugal, Évora, Montemor-o-Novo
 
-Available on <a rel="me" href="https://mastodon.social/@jbolila">Mastodon</a>
-and <a rel="me" href="https://www.linkedin.com/in/jbolila/">Linkedin</a>.
+Available at <a rel="me" href="https://mastodon.social/@jbolila">Mastodon</a>
+and <a href="https://www.linkedin.com/in/jbolila">Linkedin</a>.
 
 ## Interests
 

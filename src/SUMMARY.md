@@ -1,6 +1,8 @@
 # Summary
 
-<span style="font-size: 1.2em;"> [About](./about.md) </span>
+[About jbolila](./about.md)
+
+---
 
 # 2023
 
