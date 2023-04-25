@@ -84,7 +84,7 @@
 
         <nav id="sidebar" class="sidebar" aria-label="Table of contents">
             <div class="sidebar-scrollbox">
-                <ol class="chapter"><li class="chapter-item expanded affix "><a href="about.html">About jbolila</a></li><li class="spacer"></li><li class="chapter-item expanded affix "><li class="part-title">2023</li><li class="chapter-item expanded "><a href="2023/20230423-pgsql-dev-ssl.html"><strong aria-hidden="true">1.</strong> Apr. 23: Deploy development PostgreSQL with TLS</a></li></ol>
+                <ol class="chapter"><li class="chapter-item expanded affix "><a href="about.html">About jbolila</a></li><li class="spacer"></li><li class="chapter-item expanded affix "><li class="part-title">2023</li></ol>
             </div>
             <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
         </nav>
@@ -160,113 +160,6 @@ and <a href="https://www.linkedin.com/in/jbolila">Linkedin</a>.</p>
 <li>Cloud computing: Kubernetes, Kafka</li>
 <li>Database Systems: PostgreSQL, TimescaleDB</li>
 </ul>
-<div style="break-before: page; page-break-before: always;"></div><h1 id="deploy-postgresql-on-podmandocker-with-tls"><a class="header" href="#deploy-postgresql-on-podmandocker-with-tls">Deploy PostgreSQL on Podman/Docker with TLS</a></h1>
-<p>Security is an essential requirement for all systems, and requires the
-engagement of all actors in the process from project manager, product owners,
-developers, testers and DevOps engineers.</p>
-<p>PostgreSQL is one of the most popular open source relational databases, used
-from large to small projects. It is available on different platforms and as a
-Docker Container, although to enable TLS (new SSL) on a basic deployment, for
-example to develop a small project, it requires a few additional steps described
-in this post.</p>
-<p>In the following examples, I'll be using Podman an alternative to Docker, to run
-it on Docker should be as simple as replacing <code>podman</code> by <code>docker</code> is the
-commands below.</p>
-<p>From my research, there's no clean way to change <code>pg_hba.conf</code> and set the
-attribute <code>hostssl</code>, to set it the following script, <code>ssl-conf.sh</code> is used:</p>
-<p><code>ssl-conf.sh</code>:</p>
-<pre><code class="language-bash"># echo ssl setting into pg_hba.conf configuration file
-echo 'hostssl all all all cert clientcert=verify-ca' &gt; /var/lib/postgresql/data/pg_hba.conf
-</code></pre>
-<p>This script is included into a new image built with the following definition on
-<code>Containerfile</code>:</p>
-<pre><code class="language-dockerfile">FROM postgres:15-alpine
-
-VOLUME /var/lib/postgresql/data
-
-ENV POSTGRES_USER dev
-ENV POSTGRES_PASSWORD devS3cret
-ENV POSTGRES_DB development
-# COPY ./database/init.sql /docker-entrypoint-initdb.d/ # load initial data
-
-COPY ./out/postgresdb.key /var/lib/postgresql
-COPY ./out/postgresdb.crt /var/lib/postgresql
-
-COPY ./out/devCA.crt /var/lib/postgresql
-COPY ./out/devCA.crl /var/lib/postgresql
-
-COPY ./ssl-conf.sh /usr/local/bin
-
-RUN chown root:postgres /var/lib/postgresql/postgresdb.key &amp;&amp; chmod 640 /var/lib/postgresql/postgresdb.key
-RUN chown root:postgres /var/lib/postgresql/postgresdb.crt &amp;&amp; chmod 640 /var/lib/postgresql/postgresdb.crt
-
-RUN chown root:postgres /var/lib/postgresql/devCA.crt &amp;&amp; chmod 640 /var/lib/postgresql/devCA.crt
-RUN chown root:postgres /var/lib/postgresql/devCA.crl &amp;&amp; chmod 640 /var/lib/postgresql/devCA.crl
-
-ENTRYPOINT [&quot;docker-entrypoint.sh&quot;]
-
-CMD [ &quot;-c&quot;, &quot;ssl=on&quot;,\
-  &quot;-c&quot;, &quot;ssl_cert_file=/var/lib/postgresql/postgresdb.crt&quot;,\
-  &quot;-c&quot;, &quot;ssl_key_file=/var/lib/postgresql/postgresdb.key&quot;,\
-  &quot;-c&quot;, &quot;ssl_ca_file=/var/lib/postgresql/devCA.crt&quot;,\
-  &quot;-c&quot;, &quot;ssl_crl_file=/var/lib/postgresql/devCA.crl&quot; ]
-</code></pre>
-<p>To keep everything in context is a good practice, develop build scripts it helps
-as documentation of the entire process, for this, I'm a fan of GNU Make what I
-have used to put together additional steps related to different remaining steps.</p>
-<pre><code class="language-makefile">## install-tools: certstrap is used to create a new certificate authority
-install-tools:
-	@echo &quot;certstrap is used to create a new certificate authority&quot;
-	go install github.com/square/certstrap@latest
-
-## create-certs: create certificate authority
-create-certs:
-	@echo &quot;create certificate authority&quot;
-	certstrap init --common-name devCA
-	certstrap request-cert --common-name postgresdb --domain localhost
-	certstrap sign postgresdb --CA devCA
-	@mkdir -p ~/.postgresql
-	@cp out/devCA.crt ~/.postgresql/root.crt
-	@cp out/postgresdb.crt ~/.postgresql/postgresql.crt
-	@cp out/postgresdb.key ~/.postgresql/postgresql.key
-	@chmod 0600 ~/.postgresql/*
-
-## build-image: builds container image from Containerfile
-build-image:
-	@echo &quot;create container image from Containerfile&quot;
-	@podman build -t postgres15ssl .
-	@podman image inspect localhost/postgres15ssl:latest -f '{{.Created}}'
-
-## run: run local built image
-run:
-	@echo &quot;run local built image&quot;
-	@podman run -d -p 5432:5432 --name=pg localhost/postgres15ssl:latest
-	# podman logs -f pg
-
-## start: start podman instance pg
-start:
-	@echo &quot;start podman pg&quot;
-	podman start pg
-
-## start: start podman instance pg
-stop:
-	@echo &quot;stop podman pg&quot;
-	podman stop pg
-
-## psql: run psql with ssl
-psql:
-	psql &quot;host=127.0.0.1 port=5432 user=dev dbname=development sslmode=verify-ca&quot;
-
-## all: run all three AWS for instances, images, costs
-all: install-tools create-certs build-image run psql
-
-## help: displays help
-help: Makefile
-	@echo &quot; Choose a command:&quot;
-	@sed -n 's/^##//p' $&lt; | column -t -s ':' |  sed -e 's/^/ /'
-</code></pre>
-<p>It's all for this first post, my goal is to leave here small posts for my future
-self, and anyone who ends up in these pages able to make use of it.</p>
 
                     </main>
 
