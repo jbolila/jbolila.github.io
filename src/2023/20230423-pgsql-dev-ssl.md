@@ -14,24 +14,15 @@ In the following examples, I'll be using Podman an alternative to Docker, to run
 it on Docker should be as simple as replacing `podman` by `docker` is the
 commands below.
 
-From my research, there's no clean way to change `pg_hba.conf` and set the
-attribute `hostssl`, to set it the following script, `ssl-conf.sh` is used:
-
-`ssl-conf.sh`:
-
-```bash
-# echo ssl setting into pg_hba.conf configuration file
-echo 'hostssl all all all cert clientcert=verify-ca' > /var/lib/postgresql/data/pg_hba.conf
-```
-
 This script is included into a new image built with the following definition on
 `Containerfile`:
 
-```dockerfile
+```ini
 FROM postgres:15-alpine
 
 VOLUME /var/lib/postgresql/data
 
+# ENV PGDATA=/var/lib/postgresql/data -- the default
 ENV POSTGRES_USER dev
 ENV POSTGRES_PASSWORD devS3cret
 ENV POSTGRES_DB development
@@ -43,8 +34,6 @@ COPY ./out/postgresdb.crt /var/lib/postgresql
 COPY ./out/devCA.crt /var/lib/postgresql
 COPY ./out/devCA.crl /var/lib/postgresql
 
-COPY ./ssl-conf.sh /usr/local/bin
-
 RUN chown root:postgres /var/lib/postgresql/postgresdb.key && chmod 640 /var/lib/postgresql/postgresdb.key
 RUN chown root:postgres /var/lib/postgresql/postgresdb.crt && chmod 640 /var/lib/postgresql/postgresdb.crt
 
@@ -52,7 +41,6 @@ RUN chown root:postgres /var/lib/postgresql/devCA.crt && chmod 640 /var/lib/post
 RUN chown root:postgres /var/lib/postgresql/devCA.crl && chmod 640 /var/lib/postgresql/devCA.crl
 
 ENTRYPOINT ["docker-entrypoint.sh"]
-
 CMD [ "-c", "ssl=on",\
   "-c", "ssl_cert_file=/var/lib/postgresql/postgresdb.crt",\
   "-c", "ssl_key_file=/var/lib/postgresql/postgresdb.key",\
@@ -92,6 +80,9 @@ build-image:
 run:
 	@echo "run local built image"
 	@podman run -d -p 5432:5432 --name=pg localhost/postgres15ssl:latest
+	@sleep 10
+	@podman exec -it pg bash -c "echo 'hostssl all all all cert clientcert=verify-ca' > /var/lib/postgresql/data/pg_hba.conf"
+	psql "host=127.0.0.1 port=5432 user=dev dbname=development" -c 'select pg_reload_conf();'
 	# podman logs -f pg
 
 ## start: start podman instance pg
@@ -106,10 +97,15 @@ stop:
 
 ## psql: run psql with ssl
 psql:
-	psql "host=127.0.0.1 port=5432 user=dev dbname=development sslmode=verify-ca"
+	psql "host=127.0.0.1 port=5432 user=dev dbname=development"
 
 ## all: run all three AWS for instances, images, costs
 all: install-tools create-certs build-image run psql
+
+## deletes all container and image
+clean: stop
+	podman rm pg
+	podman rmi postgres15ssl
 
 ## help: displays help
 help: Makefile
